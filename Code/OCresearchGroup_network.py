@@ -53,10 +53,10 @@ def main(graph):
 	viewTexture = graph.getStringProperty("viewTexture")
 	viewTgtAnchorShape = graph.getIntegerProperty("viewTgtAnchorShape")
 	viewTgtAnchorSize = graph.getSizeProperty("viewTgtAnchorSize")
-	
+
 	# rename main graph to avoid confusion betweeen the OpenCare conversation (about care) 
 	# and the research group conversation (about the project)
-	graph.setName('OpenCare community')
+	graph.setName('OpenCare researchGroup')
 
 	# initialize custom properties
 	user_name = graph.getStringProperty('user_name')
@@ -73,7 +73,7 @@ def main(graph):
 	allPosts = {}
 	postWords = 0
 	checklistPosts = []
-	response = requests.get('https://edgeryders.eu/opencare/content')
+	response = requests.get('https://edgeryders.eu/opencare-researchgroup/content')
 	posts = response.json()
 	for item in posts['nodes']:
 		author = item['node']['user_id']
@@ -93,7 +93,7 @@ def main(graph):
 	allComments = {}	
 	commentsWords = 0
 	checklistComments = []		
-	response = requests.get('https://edgeryders.eu/opencare/comments') # only comments give rise to an edge
+	response = requests.get('https://edgeryders.eu/opencare-researchgroup/comments') # only comments give rise to an edge
 	comments = response.json()
 	for item in comments['nodes']:
 		author = item['node']['user_id']

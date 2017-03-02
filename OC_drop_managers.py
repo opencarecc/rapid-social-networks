@@ -93,7 +93,7 @@ def main(graph):
 		if thisCompSize > sizeGC:
 			sizeGC = thisCompSize
 		
-	numNodes = noManagers.numberOfNodes()
+	numNodes = graph.numberOfNodes()
 	print ('Connected components: ' + str (numCC))
 	print ('The giant component has ' + str(sizeGC) + ' nodes (' + str( 100 * sizeGC / float(numNodes)) + '% of total)')
 	 
