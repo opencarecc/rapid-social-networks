@@ -83,41 +83,42 @@ def main(graph):
 	viewTgtAnchorShape = graph.getIntegerProperty("viewTgtAnchorShape")
 	viewTgtAnchorSize = graph.getSizeProperty("viewTgtAnchorSize")
 	wordCount = graph.getDoubleProperty("wordCount")
-
-  # get the name of the graph and store it. This is to avoid graphs with the same name.
-	thisGraphName = graph.getName()
+	group_id = graph.getStringProperty('group_id')
 
 	# initialize properties I need
 	numComms = graph.getIntegerProperty('numComms')
 	# copy the parallel edges graph onto a new subgrah
-	nonStacked = graph.addSubGraph('nonStacked ' + thisGraphName)
+	nonStacked = graph.addSubGraph('nonStacked')
 	for n in graph.getNodes():
 		nonStacked.addNode(n)
 	for e in graph.getEdges():
 		nonStacked.addEdge(e)
 		
 	# create a stacked subgraph 
-	stacked = graph.addSubGraph('stacked '+ thisGraphName)	
+	stacked = graph.addSubGraph('stacked')	
 	
 	# add all nodes in nonStacked to stacked
 	for n in nonStacked.getNodes():	
 		stacked.addNode(n)
 		
-	# you go over all edges in graph1 and add only one edge to graph2
+	# you go over all edges in graph1 and add only one edge PER GROUPID to graph2
 	# also collect the data you are interested in
 	for edge in nonStacked.getEdges():
 		source = nonStacked.source(edge)
 		target = nonStacked.target(edge)
-		# source and target are nodes connect
+		groupID = edge ['group_ID']
+		# source and target are nodes connected
 		subEdge = findEdge(source, target, stacked, True, True)
 		if subEdge == None: # grph2 does not contain any edge between source and target
 			subEdge = stacked.addEdge(source, target)
 			numComms[subEdge] = 1
 			wordCount[subEdge] = wordCount[edge]
+			group_id[subEdge] = groupID
 		else:
-			numComms[subEdge] += 1
-			wordCount[subEdge] += wordCount[edge]
-		
+		  if subEdge['group_id'] == groupID:
+    			numComms[subEdge] += 1
+    			wordCount[subEdge] += wordCount[edge]
+    		
 	end_script = datetime.datetime.now()
 	running_time = end_script - start_script
 	print ('Executed in ' + str(running_time))

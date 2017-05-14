@@ -75,8 +75,12 @@ def main(graph):
   
   #color code 
   params = tlp.getDefaultPluginParameters("Color Mapping", graph)
-  params['colorScale'] = 'BlueYellowRed.png'
-  params['type'] = 'logarithmic'
+  params['colorScale'] = 'RedYellowGreenBlue.png'
+  params['type'] = 'linear'
   params['input property'] = degree
+  params ['override maximum value'] = True
+  params ['maximum value'] = 20000
+  params ['override minimum value'] = True
+  params ['minimum value'] = 500
   success = graph.applyColorAlgorithm('Color Mapping', params)
 

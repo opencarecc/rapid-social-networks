@@ -65,6 +65,7 @@ def main(graph):
 	wordCount = graph.getDoubleProperty('wordCount')
 	comment_id = graph.getStringProperty("comment_id")
 	title = graph.getStringProperty('title')
+	group_id = graph.getStringProperty('group_id')
 
 	involved = {} # a map of user ids 
 	nodeMap = {} # Ben's map trick
@@ -151,6 +152,7 @@ def main(graph):
 				user_name[e] = item['node']['user_name']
 				comment_id [e] = cid
 				title [e] = item['node']['title']
+				group_id [e] = item['node']['group_id']
 			else:
 				try:
 					parentCommentAuthor = allComments[pid]
@@ -161,6 +163,7 @@ def main(graph):
 					user_name[e] = item['node']['user_name']
 					comment_id [e] = cid
 					title [e] = item['node']['title']
+					group_id [e] = item['node']['group_id']
 
 				except KeyError: # deleted comments etc.
 					try:
@@ -170,10 +173,25 @@ def main(graph):
 						user_name[e] = item['node']['user_name']
 						comment_id [e] = cid
 						title [e] = item['node']['title']
-
+						group_id [e] = item['node']['group_id']
 						
 					except KeyError: 
 						pass
+
+	# compact out and rename the group IDs. "Main" is a catch-all group with everything that is not OpenInsulin or OpenVillage.
+	for e in graph.getEdges():
+		if group_id[e] == '7766':
+			group_id[e] = 'Open Insulin'
+		elif group_id[e] == '6917':
+			group_id[e] = 'OpenVillage Coord'
+		else: 
+			group_id[e] = 'Main '
+			
+	# now apply Equal Value to build the subgraphs relating to single collaboration environments
+	params = tlp.getDefaultPluginParameters("Equal Value", graph)
+	params ['Property'] = group_id
+	params ['Type'] = 'edges'
+	success = graph.applyAlgorithm('Equal Value', params)
 
 	end_script = datetime.datetime.now()
 	running_time = end_script - start_script

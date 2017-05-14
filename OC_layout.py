@@ -84,7 +84,7 @@ def main(graph):
 		degree[n] = viewMetric[n]
 	graph.applyDoubleAlgorithm('Degree', params)
 	params = tlp.getDefaultPluginParameters("Size Mapping", graph)
-	params['min size'] = 2 
+	params['min size'] = 4 
 	graph.applySizeAlgorithm('Size Mapping')
 	
 	# run Louvain and color code
