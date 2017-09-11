@@ -1,4 +1,4 @@
-# run this to stack edges on top of each other
+# Prettify. Run from the stacked.
 
 # To cancel the modifications performed by the script
 # on the current graph, click on the undo button.
@@ -14,8 +14,6 @@
 #   * Ctrl + Space  : show auto-completion dialog.
 
 from tulip import *
-import datetime
-start_script = datetime.datetime.now()
 
 # the updateVisualization(centerViews = True) function can be called
 # during script execution to update the opened views
@@ -29,40 +27,26 @@ start_script = datetime.datetime.now()
 # the main(graph) function must be defined 
 # to run the script on the current graph
 
-def findEdge(node1, node2, graph1, directed = False, create = True):
-	'''
-   finds an edge connecting two given nodes if it exists,
-   if not returns a newly created edge unless stated otherwise
-   deals with either directed or undirected graphs
-   '''
-	e = graph1.existEdge(node1, node2)
-	if e.isValid():
-		return e
-	else:
-		if not directed:
-			e = graph1.existEdge(node2, node1)
-			if e.isValid():
-				return e
-			else:
-				if create:
-					e = graph1.addEdge(node1, node2)
-					return e                        
-		else:
-			if create:    
-				e = graph1.addEdge(node1, node2)
-				return e
-			else:
-				return None
-
-
 def main(graph): 
+	viewColor = graph.getColorProperty("viewColor")
+	viewLayout = graph.getLayoutProperty("viewLayout")
+	viewMetric = graph.getDoubleProperty("viewMetric")
+	viewSize = graph.getSizeProperty("viewSize")
+	birthDate = graph.getIntegerProperty("birthDate")
+	commDate = graph.getDoubleProperty("commDate")
+	comment_id = graph.getStringProperty("comment_id")
+	creation_date = graph.getStringProperty("creation_date")
+	intimacy = graph.getDoubleProperty("intimacy")
+	manager = graph.getBooleanProperty("manager")
 	name = graph.getStringProperty("name")
+	numComms = graph.getIntegerProperty("numComms")
 	postDate = graph.getStringProperty("postDate")
+	title = graph.getStringProperty("title")
 	uid = graph.getStringProperty("uid")
 	unixDate = graph.getDoubleProperty("unixDate")
+	user_name = graph.getStringProperty("user_name")
 	viewBorderColor = graph.getColorProperty("viewBorderColor")
 	viewBorderWidth = graph.getDoubleProperty("viewBorderWidth")
-	viewColor = graph.getColorProperty("viewColor")
 	viewFont = graph.getStringProperty("viewFont")
 	viewFontAwesomeIcon = graph.getStringProperty("viewFontAwesomeIcon")
 	viewFontSize = graph.getIntegerProperty("viewFontSize")
@@ -71,53 +55,52 @@ def main(graph):
 	viewLabelBorderWidth = graph.getDoubleProperty("viewLabelBorderWidth")
 	viewLabelColor = graph.getColorProperty("viewLabelColor")
 	viewLabelPosition = graph.getIntegerProperty("viewLabelPosition")
-	viewLayout = graph.getLayoutProperty("viewLayout")
-	viewMetric = graph.getDoubleProperty("viewMetric")
 	viewRotation = graph.getDoubleProperty("viewRotation")
 	viewSelection = graph.getBooleanProperty("viewSelection")
 	viewShape = graph.getIntegerProperty("viewShape")
-	viewSize = graph.getSizeProperty("viewSize")
 	viewSrcAnchorShape = graph.getIntegerProperty("viewSrcAnchorShape")
 	viewSrcAnchorSize = graph.getSizeProperty("viewSrcAnchorSize")
 	viewTexture = graph.getStringProperty("viewTexture")
 	viewTgtAnchorShape = graph.getIntegerProperty("viewTgtAnchorShape")
 	viewTgtAnchorSize = graph.getSizeProperty("viewTgtAnchorSize")
 	wordCount = graph.getDoubleProperty("wordCount")
-
-  # get the name of the graph and store it. This is to avoid graphs with the same name.
-	thisGraphName = graph.getName()
-
-	# initialize properties I need
-	numComms = graph.getIntegerProperty('numComms')
-	# copy the parallel edges graph onto a new subgrah
-	nonStacked = graph.addSubGraph('nonStacked ' + thisGraphName)
-	for n in graph.getNodes():
-		nonStacked.addNode(n)
-	for e in graph.getEdges():
-		nonStacked.addEdge(e)
-		
-	# create a stacked subgraph 
-	stacked = graph.addSubGraph('stacked '+ thisGraphName)	
 	
-	# add all nodes in nonStacked to stacked
-	for n in nonStacked.getNodes():	
-		stacked.addNode(n)
-		
-	# you go over all edges in graph1 and add only one edge to graph2
-	# also collect the data you are interested in
-	for edge in nonStacked.getEdges():
-		source = nonStacked.source(edge)
-		target = nonStacked.target(edge)
-		# source and target are nodes connect
-		subEdge = findEdge(source, target, stacked, True, True)
-		if subEdge == None: # grph2 does not contain any edge between source and target
-			subEdge = stacked.addEdge(source, target)
-			numComms[subEdge] = 1
-			wordCount[subEdge] = wordCount[edge]
-		else:
-			numComms[subEdge] += 1
-			wordCount[subEdge] += wordCount[edge]
-		
-	end_script = datetime.datetime.now()
-	running_time = end_script - start_script
-	print ('Executed in ' + str(running_time))
+	# apply the layout
+	params = tlp.getDefaultPluginParameters("FM^3 (OGDF)", graph)
+	params['Unit edge length'] = 50
+	params['Page Format'] = 'Landscape'
+	graph.applyLayoutAlgorithm('FM^3 (OGDF)', viewLayout, params)
+	params = tlp.getDefaultPluginParameters("Curve edges", graph)
+	graph.applyAlgorithm('Curve edges')
+	
+	# run degree and size map
+	params = tlp.getDefaultPluginParameters("Degree", graph)
+	params['type'] = 'InOut'
+	params['result'] = viewMetric
+	# save the degree in its own property. This is for scene setting
+	degree = graph.getDoubleProperty('degree')
+	for n in graph.getNodes():
+		degree[n] = viewMetric[n]
+	graph.applyDoubleAlgorithm('Degree', params)
+	params = tlp.getDefaultPluginParameters("Size Mapping", graph)
+	params['min size'] = 2 
+	graph.applySizeAlgorithm('Size Mapping')
+	
+	# run Louvain and color code
+	params = tlp.getDefaultPluginParameters("Louvain", graph)
+	params['metric'] = viewMetric
+	graph.applyDoubleAlgorithm('Louvain')
+	params = tlp.getDefaultPluginParameters("Color Mapping", graph)
+	params['colorScale'] = 'Paired_11_from_ColorBrewer,org.png'
+	graph.applyColorAlgorithm('Color Mapping')
+	
+	# set labels 
+	params = tlp.getDefaultPluginParameters("To labels", graph)
+	params['input'] = user_name
+	graph.applyStringAlgorithm('To labels', params)
+	white = tlp.Color(255, 255, 255, 255)
+	for n in graph.getNodes():
+		viewLabelBorderWidth[n] = 0
+		viewLabelColor[n] = white
+
+	

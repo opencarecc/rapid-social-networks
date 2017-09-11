@@ -54,9 +54,9 @@ def main(graph):
 	viewTgtAnchorShape = graph.getIntegerProperty("viewTgtAnchorShape")
 	viewTgtAnchorSize = graph.getSizeProperty("viewTgtAnchorSize")
 	
-	# rename main graph to avoid confusion betweeen the OpenCare conversation (about care) 
-	# and the research group conversation (about the project)
-	graph.setName('OpenCare community')
+	# duplicate the main, so as to use it as a database
+	success = graph.setName('db only')
+	oCC = graph.addSubGraph('OpenCare community')
 
 	# initialize custom properties
 	user_name = graph.getStringProperty('user_name')
@@ -74,7 +74,7 @@ def main(graph):
 	allPosts = {}
 	postWords = 0
 	checklistPosts = []
-	response = requests.get('https://edgeryders.eu/opencare/content')
+	response = requests.get('https://legacy.edgeryders.eu/opencare/content')
 	posts = response.json()
 	for item in posts['nodes']:
 		author = item['node']['user_id']
@@ -94,7 +94,7 @@ def main(graph):
 	allComments = {}	
 	commentsWords = 0
 	checklistComments = []		
-	response = requests.get('https://edgeryders.eu/opencare/comments') # only comments give rise to an edge
+	response = requests.get('https://legacy.edgeryders.eu/opencare/comments') # only comments give rise to an edge
 	comments = response.json()
 	for item in comments['nodes']:
 		author = item['node']['user_id']
@@ -126,7 +126,7 @@ def main(graph):
 	
 	# add the nodes, starting from the 'involved' dictionary 
 	for user in involved:
-		n = graph.addNode()
+		n = oCC.addNode()
 		user_name [n] = involved[user]['name']
 		user_id [n] = involved[user]['uid']
 		nodeMap[involved[user]['uid']] = n # nodeMap maps from user ids to nodes
@@ -146,7 +146,7 @@ def main(graph):
 
 			if pid == '0' :
 				target = nodeMap[allPosts[nid]]
-				e = graph.addEdge(source, target)
+				e = oCC.addEdge(source, target)
 				creation_date[e] = item ['node'] ['creation_date']
 				wordCount[e] = len(item['node']['content'].split())
 				user_name[e] = item['node']['user_name']
@@ -157,7 +157,7 @@ def main(graph):
 				try:
 					parentCommentAuthor = allComments[pid]
 					target = nodeMap[parentCommentAuthor]
-					e = graph.addEdge(source, target)
+					e = oCC.addEdge(source, target)
 					creation_date[e] = item ['node'] ['creation_date']
 					wordCount[e] = len(item['node']['content'].split())
 					user_name[e] = item['node']['user_name']
@@ -168,7 +168,7 @@ def main(graph):
 				except KeyError: # deleted comments etc.
 					try:
 						target = nodeMap[allPosts[nid]] # do as if pid == 0
-						e = graph.addEdge(source, target)
+						e = oCC.addEdge(source, target)
 						wordCount[e] = len(item['node']['content'].split())
 						user_name[e] = item['node']['user_name']
 						comment_id [e] = cid
@@ -179,7 +179,7 @@ def main(graph):
 						pass
 
 	# compact out and rename the group IDs. "Main" is a catch-all group with everything that is not OpenInsulin or OpenVillage.
-	for e in graph.getEdges():
+	for e in oCC.getEdges():
 		if group_id[e] == '7766':
 			group_id[e] = 'Open Insulin'
 		elif group_id[e] == '6917':
@@ -188,10 +188,10 @@ def main(graph):
 			group_id[e] = 'Main '
 			
 	# now apply Equal Value to build the subgraphs relating to single collaboration environments
-	params = tlp.getDefaultPluginParameters("Equal Value", graph)
+	params = tlp.getDefaultPluginParameters("Equal Value", oCC)
 	params ['Property'] = group_id
 	params ['Type'] = 'edges'
-	success = graph.applyAlgorithm('Equal Value', params)
+	success = oCC.applyAlgorithm('Equal Value', params)
 
 	end_script = datetime.datetime.now()
 	running_time = end_script - start_script

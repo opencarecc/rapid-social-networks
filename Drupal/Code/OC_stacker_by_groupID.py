@@ -1,5 +1,4 @@
-# run this from the stacked graph
-# drops Noemi, Nadia and Alberto and study endogenous conversation
+# run this to stack edges on top of each other
 
 # To cancel the modifications performed by the script
 # on the current graph, click on the undo button.
@@ -15,6 +14,8 @@
 #   * Ctrl + Space  : show auto-completion dialog.
 
 from tulip import *
+import datetime
+start_script = datetime.datetime.now()
 
 # the updateVisualization(centerViews = True) function can be called
 # during script execution to update the opened views
@@ -28,7 +29,37 @@ from tulip import *
 # the main(graph) function must be defined 
 # to run the script on the current graph
 
+def findEdge(node1, node2, graph1, directed = False, create = True):
+	'''
+   finds an edge connecting two given nodes if it exists,
+   if not returns a newly created edge unless stated otherwise
+   deals with either directed or undirected graphs
+   '''
+	e = graph1.existEdge(node1, node2)
+	if e.isValid():
+		return e
+	else:
+		if not directed:
+			e = graph1.existEdge(node2, node1)
+			if e.isValid():
+				return e
+			else:
+				if create:
+					e = graph1.addEdge(node1, node2)
+					return e                        
+		else:
+			if create:    
+				e = graph1.addEdge(node1, node2)
+				return e
+			else:
+				return None
+
+
 def main(graph): 
+	name = graph.getStringProperty("name")
+	postDate = graph.getStringProperty("postDate")
+	uid = graph.getStringProperty("uid")
+	unixDate = graph.getDoubleProperty("unixDate")
 	viewBorderColor = graph.getColorProperty("viewBorderColor")
 	viewBorderWidth = graph.getDoubleProperty("viewBorderWidth")
 	viewColor = graph.getColorProperty("viewColor")
@@ -51,50 +82,43 @@ def main(graph):
 	viewTexture = graph.getStringProperty("viewTexture")
 	viewTgtAnchorShape = graph.getIntegerProperty("viewTgtAnchorShape")
 	viewTgtAnchorSize = graph.getSizeProperty("viewTgtAnchorSize")
-	
-	# initialize the property I need
-	user_name = graph.getStringProperty('user_name')
-	# create the subgraph and copy all nodes and edges in the stacked graph onto it
-	noManagers = graph.addSubGraph('noManagers')	
+	wordCount = graph.getDoubleProperty("wordCount")
+	group_id = graph.getStringProperty('group_id')
+
+	# initialize properties I need
+	numComms = graph.getIntegerProperty('numComms')
+	# copy the parallel edges graph onto a new subgrah
+	nonStacked = graph.addSubGraph('nonStacked')
 	for n in graph.getNodes():
-		noManagers.addNode(n)
+		nonStacked.addNode(n)
 	for e in graph.getEdges():
-		noManagers.addEdge(e)
+		nonStacked.addEdge(e)
 		
-	for n2 in noManagers.getNodes():
-		if user_name[n2] in ('Nadia', 'Noemi', 'Alberto'):
-			noManagers.delNode(n2)
-		
-	# run the degree algorithm 
-	params = tlp.getDefaultPluginParameters("Degree", noManagers)
-	params['type'] = 'InOut'
-	params['result'] = viewMetric
-	noManagers.applyDoubleAlgorithm('Degree', params)
+	# create a stacked subgraph 
+	stacked = graph.addSubGraph('stacked')	
 	
-	for n3 in noManagers.getNodes():
-		if viewMetric[n3] == 0:
-			noManagers.delNode(n3)
-	
-	# computes size of giant component
-	params = tlp.getDefaultPluginParameters('Connected Component', noManagers)
-	noManagers.applyDoubleAlgorithm('Connected Component', params)
-	
-	numCC	= 0
-	for n in noManagers.getNodes():
-		if viewMetric[n] > numCC:
-			numCC = viewMetric[n]
-			
-	sizeGC = 0	
-	for i in range (20):
-		thisCompSize = 0
-		for n in noManagers.getNodes():
-			if viewMetric[n] == i:
-				thisCompSize += 1
-		if thisCompSize > sizeGC:
-			sizeGC = thisCompSize
+	# add all nodes in nonStacked to stacked
+	for n in nonStacked.getNodes():	
+		stacked.addNode(n)
 		
-	numNodes = graph.numberOfNodes()
-	print ('Connected components: ' + str (numCC))
-	print ('The giant component has ' + str(sizeGC) + ' nodes (' + str( 100 * sizeGC / float(numNodes)) + '% of total)')
-	 
-		
+	# you go over all edges in graph1 and add only one edge PER GROUPID to graph2
+	# also collect the data you are interested in
+	for edge in nonStacked.getEdges():
+		source = nonStacked.source(edge)
+		target = nonStacked.target(edge)
+		groupID = edge ['group_ID']
+		# source and target are nodes connected
+		subEdge = findEdge(source, target, stacked, True, True)
+		if subEdge == None: # grph2 does not contain any edge between source and target
+			subEdge = stacked.addEdge(source, target)
+			numComms[subEdge] = 1
+			wordCount[subEdge] = wordCount[edge]
+			group_id[subEdge] = groupID
+		else:
+		  if subEdge['group_id'] == groupID:
+    			numComms[subEdge] += 1
+    			wordCount[subEdge] += wordCount[edge]
+    		
+	end_script = datetime.datetime.now()
+	running_time = end_script - start_script
+	print ('Executed in ' + str(running_time))
