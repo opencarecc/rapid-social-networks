@@ -40,7 +40,6 @@ def main(graph):
   title = graph.getStringProperty("title")
   uid = graph.getStringProperty("uid")
   unixDate = graph.getDoubleProperty("unixDate")
-  user_id = graph.getStringProperty("user_id")
   user_name = graph.getStringProperty("user_name")
   viewBorderColor = graph.getColorProperty("viewBorderColor")
   viewBorderWidth = graph.getDoubleProperty("viewBorderWidth")

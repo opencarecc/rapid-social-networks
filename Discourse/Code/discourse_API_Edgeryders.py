@@ -120,36 +120,46 @@ def fetch_posts_in_topic(id):
     calls the Discourse APis. Returns a list of dicts in topic id. Each dict contains raw data in one post.
     '''
     allPosts = [] # accumulator
-    call = 'https://edgeryders.eu/t/' + str(id) + '.json?include_raw=1' # the field "raw" is handy for word count, but not included by default.
-    time.sleep(3)
-    response = requests.get(call)
-    topic = response.json()
-    postList = topic['post_stream']['posts']
-    print 'Reading ' + str(len(postList)) + ' posts from topic ' + str(id)
-    for post in postList:
-        if post['post_number'] == 1:
-            topic_author = post['username'] 
-    for post in postList:        
-        thisPost = {} # this becomes the item in the allPosts list
-        thisPost['post_id'] = post['id']       
-        thisPost['username'] = post['username']
-        thisPost['user_id'] = post['user_id']
-        thisPost['created_at'] = post['created_at']
-        thisPost['raw'] = post['raw']
-        thisPost['post_number'] = post['post_number']        
-        if post['reply_to_post_number'] == None:
-            thisPost['reply_to_post_number'] = 1
-            thisPost['target_username'] = topic_author
-        else:
-            thisPost['reply_to_post_number'] = post['reply_to_post_number']
-            thisPost['target_username'] = post['reply_to_user']['username']
-        allPosts.append(thisPost)
-    # before we move on, we use the "reply_to_post" reference, which refers to the in-topic post_number,
-    # to add an "absolute" reference to the post_id of the parent post. Also add reference to the username of the author of the parent post.
-    for item1 in allPosts:
-         for item2 in allPosts:
-             if item1['reply_to_post_number'] == item2['post_number']:
-                 item1['reply_to_post_id'] = item2['post_id']
+    pageCounter = 1
+    postList = ['something'] # need this as a condition to start the while loop
+    while len(postList) > 0:
+      call = 'https://edgeryders.eu/t/' + str(id) + '.json?page=' + str(pageCounter) + '&include_raw=1' # the field "raw" is handy for word count, but not included by default.
+      time.sleep(3)
+      topic = requests.get(call).json()
+      postList = topic['post_stream']['posts']
+      print 'Reading ' + str(len(postList)) + ' posts from topic ' + str(id)
+      for post in postList:
+          if post['post_number'] == 1:
+              topic_author = post['username'] 
+      for post in postList:        
+          thisPost = {} # this becomes the item in the allPosts list
+          thisPost['post_id'] = post['id']       
+          thisPost['username'] = post['username']
+          thisPost['user_id'] = post['user_id']
+          thisPost['created_at'] = post['created_at']
+          thisPost['raw'] = post['raw']
+          thisPost['post_number'] = post['post_number']        
+          if post['reply_to_post_number'] == None:
+              thisPost['reply_to_post_number'] = 1
+              thisPost['target_username'] = topic_author
+          else:
+              thisPost['reply_to_post_number'] = post['reply_to_post_number']
+              if 'reply_to_user' in post:
+                thisPost['target_username'] = post['reply_to_user']['username']
+              else:
+                thisPost['target_username'] = topic_author              
+          allPosts.append(thisPost)
+                # before we move on, we use the "reply_to_post" reference, which refers to the in-topic post_number,
+      # to add an "absolute" reference to the post_id of the parent post. Also add reference to the username of the author of the parent post.
+      for item1 in allPosts:
+           for item2 in allPosts:
+               if item1['reply_to_post_number'] == item2['post_number']:
+                   item1['reply_to_post_id'] = item2['post_id']
+      if len(postList) < 20: # if we have fewer than 20 posts, there can be no other page in the topic. No point making an empty call to the APIs, so...
+        break
+      else:
+        pageCounter += 1
+
     return allPosts
             
         

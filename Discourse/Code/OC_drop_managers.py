@@ -62,7 +62,7 @@ def main(graph):
 		noManagers.addEdge(e)
 		
 	for n2 in noManagers.getNodes():
-		if user_name[n2] in ('Nadia', 'Noemi', 'Alberto'):
+		if user_name[n2] in ('nadia', 'noemi', 'alberto'):
 			noManagers.delNode(n2)
 		
 	# run the degree algorithm 

@@ -63,22 +63,30 @@ def main(graph):
   post_id = graph.getIntegerProperty('post_id')
   category_id = graph.getIntegerProperty('category_id')
   
-  tag = 'project-opencare'
+  tag = 'project-opencare' # change the tag to draw social networks of different projects
+  specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
   success = graph.setName(tag)
   involved = {}
   allPosts = {} # accumulator of the form {topic:[post0, post1...]}
+  numTopics = 0
+  numContributions = 0
+  words = 0
   nodeMap = {}
   topics = discourse_API_Edgeryders.fetch_topics_from_tag(tag)
   for topic in topics:
+      numTopics += 1
       allPosts[topic] = []
       topicPosts = discourse_API_Edgeryders.fetch_posts_in_topic(topic)
       for post in topicPosts:
+          numContributions += 1
           allPosts[topic].append(post)  
+          words += len(post['raw'].split())
           author = post['username']
+          if author in specialUsers:
+            specialUsers[author] += 1
           if author not in involved:
               involved[author] ={'username': author, 'user_id': post['user_id']}
   # build the network. Add nodes first 
-  print 'Adding nodes...'
   for person in involved:
     n = graph.addNode()
     graph.setNodePropertiesValues(n, {'user_name': involved[person]['username'], 'user_id':involved[person]['user_id'] })
@@ -97,3 +105,11 @@ def main(graph):
           target = nodeMap[topicStarter]
           e = graph.addEdge(source, target)
           graph.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
+  print 'Contributors: ' + str(len(involved))
+  print 'Contributions: ' + str(numContributions) + ' in ' + str(numTopics) + ', with ' + str(words/1000) + 'K words'
+  print 
+  print 'Adding nodes...'
+  end_script = datetime.datetime.now()
+  running_time = end_script - start_script
+  print ('Executed in ' + str(running_time))        
+   
