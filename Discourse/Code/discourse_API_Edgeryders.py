@@ -100,7 +100,7 @@ def fetch_topics_from_tag(tag):
     # the following loop continues until the page number becomes so high that the topicList is empty 
     while len(topicList) > 0:
         call = 'https://edgeryders.eu/tags/' + str(tag) + '.json?page=' + str(i)
-        time.sleep(3)
+        time.sleep(1)
         response = requests.get(call)
         tagTopics = response.json()
         topicList = tagTopics['topic_list']['topics']
@@ -118,13 +118,15 @@ def fetch_posts_in_topic(id):
     '''
     (int) => list of dicts
     calls the Discourse APis. Returns a list of dicts in topic id. Each dict contains raw data in one post.
+    It also contains the usernames of the source and the target of each post.
+    When the target is not specified, we assume it to be the person who authored the first post in the topic.
     '''
     allPosts = [] # accumulator
     pageCounter = 1
     postList = ['something'] # need this as a condition to start the while loop
     while len(postList) > 0:
       call = 'https://edgeryders.eu/t/' + str(id) + '.json?page=' + str(pageCounter) + '&include_raw=1' # the field "raw" is handy for word count, but not included by default.
-      time.sleep(3)
+      time.sleep(1)
       topic = requests.get(call).json()
       postList = topic['post_stream']['posts']
       print 'Reading ' + str(len(postList)) + ' posts from topic ' + str(id)

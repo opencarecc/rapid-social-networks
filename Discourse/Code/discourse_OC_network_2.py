@@ -99,14 +99,15 @@ def main(graph):
     for post in threadPosts: # this is a list, corresponding to 'posts-stream'
       if post['post_number'] == 1:
         topicStarter = post['username']
+      source = nodeMap[post['username']]
+      if 'reply_to_user' in post:
+        target = nodeMap[post['reply_to_user']]
       else:
-        source = nodeMap[post['username']]
-        if post['reply_to_post_number'] == (1 or null):
-          target = nodeMap[topicStarter]
-          e = graph.addEdge(source, target)
-          graph.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
+        target = nodeMap[topicStarter] # if no user was specified as target, we assume the comment is directed to the initiator of the thread
+      e = graph.addEdge(source, target)
+      graph.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
   print 'Contributors: ' + str(len(involved))
-  print 'Contributions: ' + str(numContributions) + ' in ' + str(numTopics) + ', with ' + str(words/1000) + 'K words'
+  print 'Contributions: ' + str(numContributions) + ' in ' + str(numTopics) + ' topics, with ' + str(words/1000) + 'K words'
   print 
   print 'Adding nodes...'
   end_script = datetime.datetime.now()
