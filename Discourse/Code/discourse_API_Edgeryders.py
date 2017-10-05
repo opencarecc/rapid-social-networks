@@ -77,8 +77,7 @@ def fetch_topics_from_cat(cat):
         catTopics = response.json()
         topicList = catTopics['topic_list']['topics']
         for topic in topicList:
-            thisTop = {topic['id']: topic['category_id'] }
-            tops.append(thisTop)
+            tops.append(topic['id'])
         # the following condition returns True if the page is less than full (<30 topics). It saves a call to an empty page.
         # But I still need the while condition, because the number of topics could be 0 modulo 30.
         if len(topicList) < 30: 
@@ -177,6 +176,8 @@ if __name__ == '__main__':
 ##    cc = fetch_topic_ids(openCare)
 ##    print len(cc)
 ##    print (cc)
-    posts = fetch_posts_in_topic(6359)
-    print (len(posts))
-    print (posts[2])
+    tops = fetch_topics_from_cat('docs/assembl')
+    print tops
+    moreTops = fetch_topics_from_tag('diy')
+    print moreTops
+

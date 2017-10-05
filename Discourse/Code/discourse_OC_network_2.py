@@ -63,7 +63,7 @@ def main(graph):
   post_id = graph.getIntegerProperty('post_id')
   category_id = graph.getIntegerProperty('category_id')
   
-  tag = 'project-opencare' # change the tag to draw social networks of different projects
+  tag = 'ethno-opencare' # change the tag to draw social networks of different projects
   specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
   success = graph.setName(tag)
   involved = {}
