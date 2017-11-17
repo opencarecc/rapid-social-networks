@@ -86,14 +86,14 @@ def main(graph):
 	params['min size'] = 2 
 	graph.applySizeAlgorithm('Size Mapping')
 	
-	# run Louvain and color code
-	params = tlp.getDefaultPluginParameters("Louvain", graph)
-	params['metric'] = viewMetric
-	graph.applyDoubleAlgorithm('Louvain')
-	params = tlp.getDefaultPluginParameters("Color Mapping", graph)
-	params['colorScale'] = 'Paired_11_from_ColorBrewer,org.png'
-	graph.applyColorAlgorithm('Color Mapping')
-	
+#	# run Louvain and color code
+#	params = tlp.getDefaultPluginParameters("Louvain", graph)
+#	params['metric'] = viewMetric
+#	graph.applyDoubleAlgorithm('Louvain')
+#	params = tlp.getDefaultPluginParameters("Color Mapping", graph)
+#	params['colorScale'] = 'Paired_11_from_ColorBrewer,org.png'
+#	graph.applyColorAlgorithm('Color Mapping')
+#	
 	# set labels 
 	params = tlp.getDefaultPluginParameters("To labels", graph)
 	params['input'] = user_name
