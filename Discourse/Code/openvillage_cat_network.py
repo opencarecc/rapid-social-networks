@@ -64,9 +64,10 @@ def main(graph):
   post_id = graph.getIntegerProperty('post_id')
   category_id = graph.getIntegerProperty('category_id')
   
+  success = graph.setName('root')
   cat = 'openvillage' # change the cat to draw social networks of different cats
   specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
-  success = graph.setName(cat)
+  sg = graph.addSubGraph(cat)
   involved = {}
   allPosts = {} # accumulator of the form {topic:[post0, post1...]}
   numTopics = 0
@@ -89,7 +90,7 @@ def main(graph):
               involved[author] ={'username': author, 'user_id': post['user_id']}
   # build the network. Add nodes first 
   for person in involved:
-    n = graph.addNode()
+    n = sg.addNode()
     graph.setNodePropertiesValues(n, {'user_name': involved[person]['username'], 'user_id':involved[person]['user_id'] })
     nodeMap[person] = n
   # for edges, iterate on allPosts. Within each topic, each post is either a response the post stored in the 'reply_to_user' field.
@@ -105,8 +106,8 @@ def main(graph):
         target = nodeMap[post['reply_to_user']]
       else:
         target = nodeMap[topicStarter] # if no user was specified as target, we assume the comment is directed to the initiator of the thread
-      e = graph.addEdge(source, target)
-      graph.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
+      e = sg.addEdge(source, target)
+      sg.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
   print 'Contributors: ' + str(len(involved))
   print 'Contributions: ' + str(numContributions) + ' in ' + str(numTopics) + ' topics, with ' + str(words/1000) + 'K words'
   print 

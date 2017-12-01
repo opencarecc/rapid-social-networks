@@ -1,6 +1,5 @@
 '''
 Run this to build the graph on live data from the new discourse platform
-Starts from categories
 
 Blocks:
 
@@ -64,16 +63,23 @@ def main(graph):
   post_id = graph.getIntegerProperty('post_id')
   category_id = graph.getIntegerProperty('category_id')
   
-  fest = graph.addSubGraph('festival')
-  gcat = graph.getSubGraph(8)
+  # definee the supergraph and the users involved therein
+  
+  toplevel = graph.getSuperGraph()
+  nodeMap = {} # a map from username to node
+  for sn in toplevel.getNodes():
+    nodeMap[user_name[sn]] = sn
+  print (len (nodeMap))
+  
   cat = 'festival' # change the cat to draw social networks of different cats
   specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
+  success = graph.setName(cat)
   involved = {}
   allPosts = {} # accumulator of the form {topic:[post0, post1...]}
   numTopics = 0
   numContributions = 0
   words = 0
-  nodeMap = {}
+
   topics = discourse_API_Edgeryders.fetch_topics_from_cat(cat)
   for topic in topics:
       numTopics += 1
@@ -88,31 +94,15 @@ def main(graph):
             specialUsers[author] += 1
           if author not in involved:
               involved[author] ={'username': author, 'user_id': post['user_id']}
-  print str(len(involved)) + ' unique participants in the festival convo'
-              
-  from_cat_graph = {} # build a map of already existing nodes, to keep track of who is who
-  for n in graph.getNodes():
-    name = user_name.getNodeStringValue(n)
-    from_cat_graph[name] = n
-  print str(len(from_cat_graph)) + ' nodes in the map'
-    
   # build the network. Add nodes first 
-  # if the node already exists, it is added only to the subgraph 
-  counter1 = 0
-  counter2 = 0
+  print 'Adding nodes...'
   for person in involved:
-    if person in from_cat_graph:
-      n = from_cat_graph[person]
-      fest.addNode(n)
-      nodeMap[person] = n
-      counter1 += 1
+    if person in nodeMap: # check that the node is not already present in the supergraph
+      n = graph.addNode(nodeMap[person])
     else:
-      n = fest.addNode()
+      n = graph.addNode()
       graph.setNodePropertiesValues(n, {'user_name': involved[person]['username'], 'user_id':involved[person]['user_id'] })
       nodeMap[person] = n
-      counter2 += 1
-  print str(counter1) + ' nodes added from map'
-  print str(counter2) + ' nodes added ex novo'
   # for edges, iterate on allPosts. Within each topic, each post is either a response the post stored in the 'reply_to_user' field.
   # if reply_to_post_number = null, the post is considered a reply to the first post in the topic.
   print 'Adding edges...'
@@ -126,12 +116,11 @@ def main(graph):
         target = nodeMap[post['reply_to_user']]
       else:
         target = nodeMap[topicStarter] # if no user was specified as target, we assume the comment is directed to the initiator of the thread
-      e = fest.addEdge(source, target)
+      e = graph.addEdge(source, target)
       graph.setEdgePropertiesValues(e, {'wordCount':len(post['raw'].split())})
   print 'Contributors: ' + str(len(involved))
   print 'Contributions: ' + str(numContributions) + ' in ' + str(numTopics) + ' topics, with ' + str(words/1000) + 'K words'
   print 
-  print 'Adding nodes...'
   end_script = datetime.datetime.now()
   running_time = end_script - start_script
   print ('Executed in ' + str(running_time))        

@@ -99,7 +99,7 @@ def fetch_topics_from_tag(tag):
     # the following loop continues until the page number becomes so high that the topicList is empty 
     while len(topicList) > 0:
         call = 'https://edgeryders.eu/tags/' + str(tag) + '.json?page=' + str(i)
-        time.sleep(1)
+        time.sleep(.2)
         response = requests.get(call)
         tagTopics = response.json()
         topicList = tagTopics['topic_list']['topics']
