@@ -62,10 +62,11 @@ def main(graph):
   wordCount = graph.getDoubleProperty('wordCount')
   post_id = graph.getIntegerProperty('post_id')
   category_id = graph.getIntegerProperty('category_id')
-
   # start by building a list of users that have given active consent
-  consenting = fetch_consenting()
-  # now we load the conversation based on the discourse tag
+  consenting = discourse_API_Edgeryders.fetch_consenting()
+  # and one of those who have not
+  nonConsenting = []  
+  
   tag = 'ethno-opencare' # change the tag to draw social networks of different projects
   specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
   success = graph.setName(tag)
@@ -96,6 +97,8 @@ def main(graph):
             specialUsers[author] += 1
           if author not in involved:
               involved[author] ={'username': author, 'user_id': post['user_id']}
+        else:
+          nonConsenting.append(author)
   # build the network. Add nodes first 
   for person in involved:
     n = graph.addNode()
@@ -124,4 +127,4 @@ def main(graph):
   end_script = datetime.datetime.now()
   running_time = end_script - start_script
   print ('Executed in ' + str(running_time))        
-   
+  print nonConsenting 

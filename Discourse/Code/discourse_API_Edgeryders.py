@@ -164,20 +164,33 @@ def fetch_posts_in_topic(id):
     return allPosts
             
         
-        
+def fetch_consenting():
+  '''
+  (None) => list
+  Returns a list of users who gave consent for their content to be used in research
+  '''   
+  API_key = 'b8083582f5016455b50397383374b2acd2fa032dec558efdd8d5efc1c87de180' # enter your Edgeryders API key here
+  username = 'alberto' # Enter your Edgeryders username
+  consenting = []
+  call = 'https://edgeryders.eu/administration/annotator/users.json?api_key=' + API_key + '&username=' + username
+  response = requests.get(call).json()
+  for person in response:
+    if person['edgeryders_consent'] == '1':
+      consenting.append(person['username'])
+  return consenting
+  
         
             
 if __name__ == '__main__':
     greetings = 'Hello world'
-    lf = [{'id': 8, 'slug': 'opencare'}]
+    print (greetings)
+    consenting = fetch_consenting()
+    print len(consenting)
     # oneTopic = fetch_posts_in_topic(8)
     # print oneTopic
 ##    oc = fetch_topic_ids(lf)
 ##    cc = fetch_topic_ids(openCare)
 ##    print len(cc)
 ##    print (cc)
-    tops = fetch_topics_from_cat('docs/assembl')
-    print tops
-    moreTops = fetch_topics_from_tag('diy')
-    print moreTops
+
 
