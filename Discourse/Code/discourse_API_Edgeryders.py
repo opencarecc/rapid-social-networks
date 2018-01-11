@@ -169,8 +169,8 @@ def fetch_consenting():
   (None) => list
   Returns a list of users who gave consent for their content to be used in research
   '''   
-  API_key = 'b8083582f5016455b50397383374b2acd2fa032dec558efdd8d5efc1c87de180' # enter your Edgeryders API key here
-  username = 'alberto' # Enter your Edgeryders username
+  API_key = '' # enter your Edgeryders API key here
+  username = '' # Enter your Edgeryders username
   consenting = []
   call = 'https://edgeryders.eu/administration/annotator/users.json?api_key=' + API_key + '&username=' + username
   response = requests.get(call).json()
@@ -184,13 +184,6 @@ def fetch_consenting():
 if __name__ == '__main__':
     greetings = 'Hello world'
     print (greetings)
+    # start by building a list of users that have given active consent
     consenting = fetch_consenting()
-    print len(consenting)
-    # oneTopic = fetch_posts_in_topic(8)
-    # print oneTopic
-##    oc = fetch_topic_ids(lf)
-##    cc = fetch_topic_ids(openCare)
-##    print len(cc)
-##    print (cc)
-
-
+    # and one of those who have not
