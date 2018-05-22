@@ -66,7 +66,7 @@ def main(graph):
   
   fest = graph.addSubGraph('festival')
   gcat = graph.getSubGraph(8)
-  cat = 'festival' # change the cat to draw social networks of different cats
+  cat = 'workspaces/lote6' # change the cat to draw social networks of different cats
   specialUsers = {'Alberto': 0, 'Nadia': 0, 'Noemi': 0} # keeping track of special users, like community managers
   involved = {}
   allPosts = {} # accumulator of the form {topic:[post0, post1...]}

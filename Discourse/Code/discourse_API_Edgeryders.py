@@ -59,8 +59,8 @@ def fetch_category_ids(name, exceptionNames = []):
     
 def fetch_topics_from_cat(cat):
     '''
-    (dict) => list of ints
-    calls the discourse APIs. Accepts as an input the output of fetch_category_ids
+    (str) => list of ints
+    calls the discourse APIs. Accepts as an input the category name.
     It returns a single list of all topic ids in the categories we want. 
     '''
     print ('Fetching topic ids..')
@@ -72,7 +72,7 @@ def fetch_topics_from_cat(cat):
     while len(topicList) > 0:
         call = 'https://edgeryders.eu/c/' + cat + '.json?page=' + str(i) 
         print 'Reading posts: page ' + str(i)
-        time.sleep(3)
+        time.sleep(1)
         response = requests.get(call)
         catTopics = response.json()
         topicList = catTopics['topic_list']['topics']
@@ -178,12 +178,40 @@ def fetch_consenting():
     if person['edgeryders_consent'] == '1':
       consenting.append(person['username'])
   return consenting
+
+def fetch_nonConsenting():
+  '''
+  (None) => list
+  Returns a list of users who denied consent for their content to be used in research
+  '''   
+  API_key = 'a6d853e96180461afbfa339ae58d9a4cae179a43210cf325a6adef2aa1bb149d' # enter your Edgeryders API key here
+  username = 'alberto' # Enter your Edgeryders username
+  nonConsenting = []
+  call = 'https://edgeryders.eu/administration/annotator/users.json?api_key=' + API_key + '&username=' + username
+  response = requests.get(call).json()
+  for person in response:
+    if person['edgeryders_consent'] == '0':
+      nonConsenting.append(person['username'])
+  return nonConsenting  
   
+def fetch_top_level_categories():
+  '''
+  (None) => list
+  Returns a list of slugs of only the top-level cats (no parent cats)
+  '''
+  call = 'https://edgeryders.eu/site.json'
+  response = requests.get(call).json()
+  catList = []
+  for cat in response['categories']:
+    if 'parent_category_id' not in cat:
+      catList.append(cat['slug'])
+  return catList
         
             
 if __name__ == '__main__':
     greetings = 'Hello world'
     print (greetings)
     # start by building a list of users that have given active consent
-    consenting = fetch_consenting()
+    cats = fetch_top_level_categories()
+    print cats
     # and one of those who have not
